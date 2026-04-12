@@ -66,21 +66,25 @@ impl<'info> InitializeMarket<'info> {
         let clock = Clock::get()?;
 
         // checking that the expiry date is of the future .. market should not have an expiry date of the past
-        require!(expiry_ts > clock.unix_timestamp, PredictionMarketError::InvalidExpiryDate);
+        require!(
+            expiry_ts > clock.unix_timestamp,
+            PredictionMarketError::InvalidSettlementDeadline
+        );
 
         self.market.set_inner(Market {
-            authority: *self.authority.to_account_info().key,
+            authority: self.authority.key(),
             market_id,
             is_settled: false,
             expiry_ts,
-            collateral_mint: *self.collateral_mint.to_account_info().key,
-            collateral_vault: *self.collateral_vault.to_account_info().key,
-            outcome_a_mint: *self.outcome_a_mint.to_account_info().key,
-            outcome_b_mint: *self.outcome_b_mint.to_account_info().key,
+            collateral_mint: self.collateral_mint.key(),
+            collateral_vault: self.collateral_vault.key(),
+            outcome_a_mint: self.outcome_a_mint.key(),
+            outcome_b_mint: self.outcome_b_mint.key(),
             winning_outcome: None,
             total_collateral_locked: 0,
             bump: bumps.market,
         });
+
         Ok(())
     }
 }
