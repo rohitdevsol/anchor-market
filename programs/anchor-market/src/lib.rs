@@ -15,7 +15,7 @@ declare_id!("7JAt2fYYm4L9ZYTeZiN3j7eQtUGwCHiCjk9gn3MEfx55");
 pub mod anchor_market {
     use super::*;
 
-    pub fn initialize(
+    pub fn initialize_ix(
         ctx: Context<InitializeMarket>,
         market_id: u32,
         expiry_ts: i64
@@ -24,17 +24,17 @@ pub mod anchor_market {
         Ok(())
     }
 
-    pub fn split_tokens(ctx: Context<SplitToken>, market_id: u32, amount: u64) -> Result<()> {
+    pub fn split_tokens_ix(ctx: Context<SplitToken>, market_id: u32, amount: u64) -> Result<()> {
         ctx.accounts.split_token(market_id, amount)?;
         Ok(())
     }
 
-    pub fn merge_tokens(ctx: Context<MergeToken>, market_id: u32, amount: u64) -> Result<()> {
+    pub fn merge_tokens_ix(ctx: Context<MergeToken>, market_id: u32, amount: u64) -> Result<()> {
         ctx.accounts.merge_tokens(market_id, amount)?;
         Ok(())
     }
 
-    pub fn set_winner_side(
+    pub fn set_winner_side_ix(
         ctx: Context<SetWinner>,
         market_id: u32,
         winner: WinningOutcome
