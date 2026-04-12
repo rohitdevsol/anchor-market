@@ -33,4 +33,13 @@ pub mod anchor_market {
         ctx.accounts.merge_tokens(market_id, amount)?;
         Ok(())
     }
+
+    pub fn set_winner_side(
+        ctx: Context<SetWinner>,
+        market_id: u32,
+        winner: WinningOutcome
+    ) -> Result<()> {
+        ctx.accounts.set_winner(market_id, winner)?;
+        Ok(())
+    }
 }
