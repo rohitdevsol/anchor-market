@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{ Mint, Token, TokenAccount };
+use anchor_spl::{ token::Token, token_interface::{ Mint, TokenAccount, TokenInterface } };
 use crate::{ Market, error::PredictionMarketError };
 
 #[derive(Accounts)]
@@ -12,12 +12,12 @@ pub struct InitializeMarket<'info> {
         seeds = [b"market".as_ref(), market_id.to_le_bytes().as_ref()],
         bump
     )]
-    pub market: Account<'info, Market>,
+    pub market: Box<Account<'info, Market>>,
 
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    pub collateral_mint: Account<'info, Mint>, // USDC one
+    pub collateral_mint: InterfaceAccount<'info, Mint>, // USDC one
 
     #[account(
         init,
@@ -27,7 +27,7 @@ pub struct InitializeMarket<'info> {
         seeds = [b"vault".as_ref(), market_id.to_le_bytes().as_ref()],
         bump
     )]
-    pub collateral_vault: Account<'info, TokenAccount>,
+    pub collateral_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         init,
@@ -37,7 +37,7 @@ pub struct InitializeMarket<'info> {
         seeds = [b"outcome_a", market_id.to_le_bytes().as_ref()],
         bump
     )]
-    pub outcome_a_mint: Account<'info, Mint>,
+    pub outcome_a_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
         init,
@@ -47,9 +47,9 @@ pub struct InitializeMarket<'info> {
         seeds = [b"outcome_b", market_id.to_le_bytes().as_ref()],
         bump
     )]
-    pub outcome_b_mint: Account<'info, Mint>,
+    pub outcome_b_mint: InterfaceAccount<'info, Mint>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }

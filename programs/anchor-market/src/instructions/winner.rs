@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{ Mint, Token };
+use anchor_spl::{ token_interface::{ Mint, TokenInterface } };
 use crate::Market;
 
 #[derive(Accounts)]
@@ -15,17 +15,17 @@ pub struct SetWinner<'info> {
         constraint = market.market_id == market_id,
         constraint = market.authority == authority.key()
     )]
-    pub market: Account<'info, Market>,
+    pub market: Box<Account<'info, Market>>,
 
     #[account(
         mut,
         constraint = outcome_a_mint.key() == market.outcome_a_mint
     )]
-    pub outcome_a_mint: Account<'info, Mint>,
+    pub outcome_a_mint: InterfaceAccount<'info, Mint>,
     #[account(
         mut,
          constraint = outcome_b_mint.key() == market.outcome_b_mint
     )]
-    pub outcome_b_mint: Account<'info, Mint>,
-    pub token_program: Program<'info, Token>,
+    pub outcome_b_mint: InterfaceAccount<'info, Mint>,
+    pub token_program: Interface<'info, TokenInterface>,
 }

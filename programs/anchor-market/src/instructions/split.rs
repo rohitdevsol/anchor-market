@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{ self, Mint, MintTo, Token, TokenAccount, Transfer };
+use anchor_spl::{
+    token_interface::{ self, Mint, MintTo, TokenAccount, TokenInterface, TransferChecked },
+};
 use crate::{ Market, error::PredictionMarketError };
 
 #[derive(Accounts)]
@@ -11,51 +13,53 @@ pub struct SplitToken<'info> {
         bump = market.bump,
         constraint = market.market_id == market_id
     )]
-    pub market: Account<'info, Market>,
+    pub market: Box<Account<'info, Market>>,
 
     #[account(mut)]
     pub user: Signer<'info>,
+
+    pub collateral_mint: InterfaceAccount<'info, Mint>, // USDC one
 
     #[account(
         mut,
         constraint = user_collateral.mint == market.collateral_mint,
         constraint = user_collateral.owner == user.key()
     )]
-    pub user_collateral: Account<'info, TokenAccount>,
+    pub user_collateral: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         mut,
         constraint = collateral_vault.key() == market.collateral_vault
     )]
-    pub collateral_vault: Account<'info, TokenAccount>,
+    pub collateral_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         mut,
         constraint = outcome_a_mint.key() == market.outcome_a_mint
     )]
-    pub outcome_a_mint: Account<'info, Mint>,
+    pub outcome_a_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
         mut,
         constraint = outcome_b_mint.key() == market.outcome_b_mint
     )]
-    pub outcome_b_mint: Account<'info, Mint>,
+    pub outcome_b_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
         mut,
         constraint = user_outcome_a.mint == market.outcome_a_mint,
         constraint = user_outcome_a.owner == user.key()
     )]
-    pub user_outcome_a: Account<'info, TokenAccount>,
+    pub user_outcome_a: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         mut,
         constraint = user_outcome_b.mint == market.outcome_b_mint,
         constraint = user_outcome_b.owner == user.key()
     )]
-    pub user_outcome_b: Account<'info, TokenAccount>,
+    pub user_outcome_b: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 impl<'info> SplitToken<'info> {
@@ -71,13 +75,15 @@ impl<'info> SplitToken<'info> {
         );
 
         // user to the collateral vault
-        token::transfer(
-            CpiContext::new(*self.token_program.key, Transfer {
+        token_interface::transfer_checked(
+            CpiContext::new(*self.token_program.key, TransferChecked {
                 from: self.user_collateral.to_account_info(),
                 to: self.collateral_vault.to_account_info(),
                 authority: self.user.to_account_info(),
+                mint: self.collateral_mint.to_account_info(),
             }),
-            amount
+            amount,
+            self.collateral_mint.decimals
         )?;
 
         // mint to user outcome accounts
@@ -85,7 +91,7 @@ impl<'info> SplitToken<'info> {
         let signer_seeds = &[b"market".as_ref(), binding.as_ref(), &[self.market.bump]];
         let signer = &[&signer_seeds[..]];
 
-        token::mint_to(
+        token_interface::mint_to(
             CpiContext::new_with_signer(
                 *self.token_program.key,
                 MintTo {
@@ -98,7 +104,7 @@ impl<'info> SplitToken<'info> {
             amount
         )?;
 
-        token::mint_to(
+        token_interface::mint_to(
             CpiContext::new_with_signer(
                 *self.token_program.key,
                 MintTo {
