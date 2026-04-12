@@ -76,7 +76,7 @@ impl<'info> SplitToken<'info> {
 
         // user to the collateral vault
         token_interface::transfer_checked(
-            CpiContext::new(*self.token_program.key, TransferChecked {
+            CpiContext::new(self.token_program.key(), TransferChecked {
                 from: self.user_collateral.to_account_info(),
                 to: self.collateral_vault.to_account_info(),
                 authority: self.user.to_account_info(),
@@ -93,7 +93,7 @@ impl<'info> SplitToken<'info> {
 
         token_interface::mint_to(
             CpiContext::new_with_signer(
-                *self.token_program.key,
+                self.token_program.key(),
                 MintTo {
                     authority: self.market.to_account_info(),
                     mint: self.outcome_a_mint.to_account_info(),
@@ -106,7 +106,7 @@ impl<'info> SplitToken<'info> {
 
         token_interface::mint_to(
             CpiContext::new_with_signer(
-                *self.token_program.key,
+                self.token_program.key(),
                 MintTo {
                     mint: self.outcome_b_mint.to_account_info(),
                     to: self.user_outcome_b.to_account_info(),

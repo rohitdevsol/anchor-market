@@ -82,7 +82,7 @@ impl<'info> MergeToken<'info> {
         // transfer from the collateral vault to the user collateral vault
         token_interface::transfer_checked(
             CpiContext::new_with_signer(
-                *self.token_program.key,
+                self.token_program.key(),
                 TransferChecked {
                     from: self.collateral_vault.to_account_info(),
                     to: self.user_collateral.to_account_info(),
@@ -98,7 +98,7 @@ impl<'info> MergeToken<'info> {
         // jitna b payout diya hai utna user me se burn krdo
         // burn the outcome a tokens from user .. payout
         token_interface::burn(
-            CpiContext::new(*self.token_program.key, Burn {
+            CpiContext::new(self.token_program.key(), Burn {
                 from: self.user_outcome_a.to_account_info(),
                 authority: self.user.to_account_info(),
                 mint: self.outcome_a_mint.to_account_info(),
@@ -109,7 +109,7 @@ impl<'info> MergeToken<'info> {
         // burn the outcome b tokens from user .. payout
 
         token_interface::burn(
-            CpiContext::new(*self.token_program.key, Burn {
+            CpiContext::new(self.token_program.key(), Burn {
                 mint: self.outcome_b_mint.to_account_info(),
                 from: self.user_outcome_b.to_account_info(),
                 authority: self.user.to_account_info(),
