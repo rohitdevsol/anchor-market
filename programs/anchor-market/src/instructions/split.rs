@@ -59,7 +59,7 @@ pub struct SplitToken<'info> {
 }
 
 impl<'info> SplitToken<'info> {
-    pub fn split_token(&mut self, amount: u64) -> Result<()> {
+    pub fn split_token(&mut self, market_id: u32, amount: u64) -> Result<()> {
         // we will get some amount from user and we need something
 
         // check if the market is settled

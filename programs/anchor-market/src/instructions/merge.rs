@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{ Mint, Token, TokenAccount };
-use crate::Market;
+use anchor_spl::token::{ self, Burn, Mint, Token, TokenAccount, Transfer };
+use crate::{ Market, error::PredictionMarketError };
 
 #[derive(Accounts)]
 #[instruction(market_id:u32)]
@@ -51,4 +51,63 @@ pub struct MergeToken<'info> {
     pub user_outcome_b: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
+}
+
+impl<'info> MergeToken<'info> {
+    pub fn merge_tokens(&mut self, market_id: u32, amount: u64) -> Result<()> {
+        require!(!self.market.is_settled, PredictionMarketError::MarketAlreadySettled);
+        require!(amount > 0, PredictionMarketError::InvalidAmount);
+        require!(
+            Clock::get()?.unix_timestamp < self.market.expiry_ts,
+            PredictionMarketError::MarketExpired
+        );
+
+        // we need to get the minimum of both
+        let payout = std::cmp::min(self.user_outcome_a.amount, self.user_outcome_b.amount);
+        require!(payout > 0, PredictionMarketError::InvalidAmount);
+
+        let binding = self.market.market_id.to_be_bytes();
+
+        let seeds = &[b"market".as_ref(), binding.as_ref(), &[self.market.bump]];
+
+        let signer = &[&seeds[..]];
+
+        // transfer from the collateral vault to the user collateral vault
+        token::transfer(
+            CpiContext::new_with_signer(
+                *self.token_program.key,
+                Transfer {
+                    from: self.collateral_vault.to_account_info(),
+                    to: self.user_collateral.to_account_info(),
+                    authority: self.market.to_account_info(),
+                },
+                signer
+            ),
+            payout
+        )?;
+
+        // jitna b payout diya hai utna user me se burn krdo
+        // burn the outcome a tokens from user .. payout
+        token::burn(
+            CpiContext::new(*self.token_program.key, Burn {
+                from: self.user_outcome_a.to_account_info(),
+                authority: self.user.to_account_info(),
+                mint: self.outcome_a_mint.to_account_info(),
+            }),
+            payout
+        )?;
+
+        // burn the outcome b tokens from user .. payout
+
+        token::burn(
+            CpiContext::new(*self.token_program.key, Burn {
+                mint: self.outcome_b_mint.to_account_info(),
+                from: self.user_outcome_b.to_account_info(),
+                authority: self.user.to_account_info(),
+            }),
+            payout
+        )?;
+
+        Ok(())
+    }
 }

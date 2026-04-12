@@ -23,4 +23,14 @@ pub mod anchor_market {
         ctx.accounts.initilize_market(market_id, expiry_ts, ctx.bumps)?;
         Ok(())
     }
+
+    pub fn split_tokens(ctx: Context<SplitToken>, market_id: u32, amount: u64) -> Result<()> {
+        ctx.accounts.split_token(market_id, amount)?;
+        Ok(())
+    }
+
+    pub fn merge_tokens(ctx: Context<MergeToken>, market_id: u32, amount: u64) -> Result<()> {
+        ctx.accounts.merge_tokens(market_id, amount)?;
+        Ok(())
+    }
 }
