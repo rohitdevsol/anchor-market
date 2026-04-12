@@ -42,4 +42,9 @@ pub mod anchor_market {
         ctx.accounts.set_winner(market_id, winner)?;
         Ok(())
     }
+
+    pub fn claim_reward_ix(ctx: Context<ClaimRewards>, market_id: u32) -> Result<()> {
+        ctx.accounts.claim_rewards(market_id)?;
+        Ok(())
+    }
 }
