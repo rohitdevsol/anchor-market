@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token,
     token_2022::TransferChecked,
     token_interface::{ self, Mint, TokenAccount, TokenInterface },
 };
