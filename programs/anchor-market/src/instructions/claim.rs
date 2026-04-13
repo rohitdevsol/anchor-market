@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token_2022::TransferChecked,
-    token_interface::{ self, Mint, TokenAccount, TokenInterface },
+    token_interface::{ self, Mint, TokenAccount, TokenInterface, TransferChecked },
 };
 use crate::{ Market, error::PredictionMarketError, state::WinningOutcome };
 
@@ -90,7 +89,7 @@ impl<'info> ClaimRewards<'info> {
             amount
         )?;
 
-        let binding = self.market.market_id.to_be_bytes();
+        let binding = self.market.market_id.to_le_bytes();
 
         let seeds = &[b"market".as_ref(), binding.as_ref(), &[self.market.bump]];
 
@@ -101,9 +100,9 @@ impl<'info> ClaimRewards<'info> {
                 self.token_program.key(),
                 TransferChecked {
                     from: self.collateral_vault.to_account_info(),
-                    mint: self.collateral_mint.to_account_info(),
                     to: self.user_collateral.to_account_info(),
                     authority: self.market.to_account_info(),
+                    mint: self.collateral_mint.to_account_info(),
                 },
                 signer
             ),
