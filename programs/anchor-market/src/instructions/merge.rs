@@ -35,9 +35,15 @@ pub struct MergeToken<'info> {
     )]
     pub collateral_vault: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    #[account(constraint = outcome_a_mint.key() == market.outcome_a_mint)]
+    #[account(
+        mut,
+        constraint = outcome_a_mint.key() == market.outcome_a_mint
+    )]
     pub outcome_a_mint: InterfaceAccount<'info, Mint>,
-    #[account(constraint = outcome_b_mint.key() == market.outcome_b_mint)]
+    #[account(
+        mut,
+        constraint = outcome_b_mint.key() == market.outcome_b_mint
+    )]
     pub outcome_b_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
