@@ -1,11 +1,9 @@
 use anchor_lang::prelude::*;
 
-mod constants;
 mod error;
 mod instructions;
 mod state;
 
-use constants::*;
 use instructions::*;
 use state::*;
 
